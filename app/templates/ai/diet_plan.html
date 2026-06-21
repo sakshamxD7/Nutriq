@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+
+{% block title %}AI Diet Plan Generator — Nutriq{% endblock %}
+
+{% block content %}
+<div class="hero flex-center" style="background-color: var(--color-sage); min-height: 50vh; height: auto; padding-top: 10rem; padding-bottom: 4rem;">
+    <div class="container" style="padding: 0 4rem;">
+        <h1 style="font-size: 5vw; line-height: 0.9; margin-bottom: 1.5rem;">AI DIET PLANNER</h1>
+        <p class="label-uppercase" style="opacity: 0.7; max-width: 600px; margin-bottom: 3rem;">
+            Generate a personalized 7, 14, or 28-day diet plan using Google Gemini AI, customized with common Indian dishes matching your exact caloric and dietary requirements.
+        </p>
+
+        <!-- Configuration Form -->
+        <div class="db-panel" style="max-width: 800px; margin-bottom: 0; box-shadow: 0 20px 40px rgba(1, 71, 46, 0.1);">
+            <form action="{{ url_for('ai.diet_plan') }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                    <div class="form-group">
+                        <label class="label-uppercase" for="cuisine">Cuisine Style</label>
+                        <select name="cuisine" id="cuisine" class="form-input" required>
+                            <option value="Mixed">Mixed / Pan-Indian</option>
+                            <option value="North Indian">North Indian Staples</option>
+                            <option value="South Indian">South Indian Staples</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="label-uppercase" for="duration">Duration (Days)</label>
+                        <select name="duration" id="duration" class="form-input" required>
+                            <option value="7">7 Days Plan</option>
+                            <option value="14">14 Days Plan</option>
+                            <option value="28">28 Days Plan</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="label-uppercase" for="allergies">Allergies / Restrictions (e.g. peanut-allergy, no milk, low sodium)</label>
+                    <input type="text" name="allergies" id="allergies" class="form-input" placeholder="e.g. none, no mushrooms, gluten-free">
+                </div>
+
+                <button type="submit" class="btn-premium" style="width: 100%;" onclick="this.innerText='GENERATING PLAN VIA GEMINI AI...';">GENERATE DIET PLAN</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="section-wrapper section-olive">
+    <div class="container" style="max-width: 1000px;">
+        {% if plan_data %}
+            <h2 style="font-size: 3rem; margin-bottom: 2rem;">YOUR CURRENT PLAN</h2>
+            
+            <!-- Accordion day list -->
+            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                {% for day in plan_data.days %}
+                    <div class="db-panel day-accordion" style="margin-bottom: 0; padding: 2rem; cursor: pointer;">
+                        <div class="accordion-trigger" style="display: flex; justify-content: space-between; align-items: center;">
+                            <h3 style="font-size: 1.75rem; margin-bottom: 0;">DAY {{ day.day }}</h3>
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <span class="label-uppercase" style="margin-bottom: 0; opacity: 0.6;">Target: {{ day.total_calories }} kcal</span>
+                                <span class="accordion-icon" style="font-size: 1.5rem;">+</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Accordion collapsible content -->
+                        <div class="accordion-content" style="display: none; margin-top: 2rem; border-top: 1px solid rgba(1, 71, 46, 0.08); padding-top: 1.5rem;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                                
+                                {% for meal_name in ['breakfast', 'lunch', 'dinner', 'snacks'] %}
+                                    {% set meal = day[meal_name] %}
+                                    <div class="log-item" style="flex-direction: column; align-items: flex-start; gap: 1rem; background-color: var(--color-cream); padding: 1.5rem 2rem;">
+                                        <div style="display: flex; justify-content: space-between; width: 100%; border-bottom: 1px solid rgba(1, 71, 46, 0.05); padding-bottom: 0.5rem;">
+                                            <span class="label-uppercase" style="margin-bottom: 0; font-size: 11px;">{{ meal_name.upper() }}</span>
+                                            <strong style="font-size: 13px;">{{ meal.calories }} kcal</strong>
+                                        </div>
+                                        
+                                        <div style="width: 100%;">
+                                            <h4 style="font-size: 1.25rem; margin-bottom: 0.25rem; text-transform: none; font-family: var(--font-body); font-weight: bold;">
+                                                {{ meal.name }}
+                                            </h4>
+                                            <p style="font-size: 12px; opacity: 0.7; margin-bottom: 0.5rem;">Serving Size: {{ meal.quantity }}</p>
+                                            
+                                            <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; display: flex; gap: 1rem; opacity: 0.8;">
+                                                <span>P: {{ meal.protein }}g</span>
+                                                <span>C: {{ meal.carbs }}g</span>
+                                                <span>F: {{ meal.fat }}g</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Log this meal trigger -->
+                                        <button class="quick-add-btn log-ai-meal-btn" 
+                                                data-name="{{ meal.name }}" 
+                                                data-meal-type="{{ meal_name }}" 
+                                                data-calories="{{ meal.calories }}" 
+                                                data-protein="{{ meal.protein }}" 
+                                                data-carbs="{{ meal.carbs }}" 
+                                                data-fat="{{ meal.fat }}" 
+                                                data-quantity="{{ meal.quantity }}"
+                                                style="width: 100%; margin-top: 0.5rem; padding: 0.75rem;">
+                                            LOG THIS MEAL
+                                        </button>
+                                    </div>
+                                {% endfor %}
+
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="db-panel text-center" style="padding: 5rem 2rem; opacity: 0.5;">
+                <p>No diet plan generated yet. Select choices above and click generate.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const accordions = document.querySelectorAll(".day-accordion");
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    // Accordion Toggle
+    accordions.forEach(accordion => {
+        const trigger = accordion.querySelector(".accordion-trigger");
+        const content = accordion.querySelector(".accordion-content");
+        const icon = accordion.querySelector(".accordion-icon");
+
+        trigger.addEventListener("click", function (e) {
+            // Prevent toggling when clicking buttons inside the accordion
+            if (e.target.closest('.log-ai-meal-btn')) return;
+
+            const isOpen = content.style.display === "block";
+            
+            // Close all first for accordion behavior
+            accordions.forEach(acc => {
+                acc.querySelector(".accordion-content").style.display = "none";
+                acc.querySelector(".accordion-icon").innerText = "+";
+            });
+
+            if (!isOpen) {
+                content.style.display = "block";
+                icon.innerText = "-";
+            }
+        });
+    });
+
+    // Log AI meal click binding
+    const logButtons = document.querySelectorAll(".log-ai-meal-btn");
+    logButtons.forEach(btn => {
+        btn.addEventListener("click", function () {
+            const params = {
+                name: this.dataset.name,
+                meal_type: this.dataset.mealType,
+                calories: this.dataset.calories,
+                protein: this.dataset.protein,
+                carbs: this.dataset.carbs,
+                fat: this.dataset.fat,
+                quantity: this.dataset.quantity
+            };
+
+            btn.disabled = true;
+            btn.innerText = "LOGGING...";
+
+            // Post to backend API
+            const formData = new FormData();
+            for (const key in params) {
+                formData.append(key, params[key]);
+            }
+
+            fetch("/ai/plan/log-meal", {
+                method: "POST",
+                headers: {
+                    "X-CSRF-Token": csrfToken
+                },
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    btn.innerText = "LOGGED ✔️";
+                    btn.style.backgroundColor = "var(--color-forest)";
+                    btn.style.color = "var(--color-cream)";
+                    
+                    // Trigger flash replacement
+                    const banner = document.createElement("div");
+                    banner.className = "alert-banner alert-banner-success";
+                    banner.innerText = data.message;
+                    document.querySelector(".alert-container").appendChild(banner);
+                    setTimeout(() => banner.remove(), 4000);
+                } else {
+                    btn.disabled = false;
+                    btn.innerText = "TRY AGAIN";
+                    alert(data.error);
+                }
+            })
+            .catch(err => {
+                console.error("AI log meal error:", err);
+                btn.disabled = false;
+                btn.innerText = "LOG THIS MEAL";
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}Barcode Scanner — Nutriq{% endblock %}
+
+{% block content %}
+<div class="hero flex-center" style="background-color: var(--color-sage); min-height: 100vh; padding-top: 8rem; padding-bottom: 4rem; height: auto;">
+    <div class="modal-content" style="max-width: 600px; box-shadow: 0 30px 60px rgba(1, 71, 46, 0.15); border-radius: 4rem; text-align: center;">
+        <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem;">BARCODE SCANNER</h1>
+        <p class="label-uppercase" style="opacity: 0.6; margin-bottom: 2.5rem;">Scan packaged products via Open Food Facts API</p>
+        
+        <!-- Live Camera Stream View Container -->
+        <div id="scanner-interactive" style="width: 100%; height: 300px; background-color: var(--color-forest); border-radius: 2.5rem; overflow: hidden; margin-bottom: 2rem; display: none; position: relative;">
+            <!-- Quagga overlays video elements here -->
+        </div>
+
+        <div id="barcode-result" style="margin-bottom: 2rem; min-height: 40px; font-weight: bold;">
+            <p>Scanner is ready. Click below to activate your camera.</p>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <button id="start-scanner-btn" class="btn-premium">START CAMERA SCANNER</button>
+            <button id="stop-scanner-btn" class="btn-premium" style="background-color: #e63946; color: white; display: none;">STOP SCANNER</button>
+            <a href="{{ url_for('food.search') }}" class="label-uppercase" style="margin-top: 1.5rem; text-decoration: underline;">Or Search Manually</a>
+        </div>
+    </div>
+</div>
+
+<!-- Load QuaggaJS Library from Cloudflare CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js" integrity="sha512-5/4p/Fkrf0F94rW7S27B+c1R6q2N2wS+UewX8a28W4bVpbe6Lp5g8u2N8C9X3l+tU5V/aBq4y30a84n61W+f9g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<!-- Barcode scan logic -->
+<script src="{{ url_for('static', filename='js/barcode.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}Notification Settings — Nutriq{% endblock %}
+
+{% block content %}
+<div class="hero flex-center" style="background-color: var(--color-sage); min-height: 100vh; padding-top: 8rem;">
+    <div class="modal-content" style="max-width: 550px; box-shadow: 0 30px 60px rgba(1, 71, 46, 0.15); border-radius: 4rem;">
+        <h1 class="text-center" style="font-size: 2.5rem; margin-bottom: 0.5rem; letter-spacing: -0.01em;">NOTIFICATION SETTINGS</h1>
+        <p class="text-center label-uppercase" style="opacity: 0.6; margin-bottom: 2.5rem;">Configure your daily log reminders</p>
+        
+        <form action="{{ url_for('notifications.settings') }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <div class="form-group">
+                <label class="label-uppercase" for="reminder_time">Preferred Reminder Time</label>
+                <input type="time" name="reminder_time" id="reminder_time" class="form-input" value="{{ current_user.reminder_time }}" required>
+            </div>
+            
+            <div class="form-group" style="display: flex; align-items: center; gap: 1rem; margin-top: 2rem; margin-bottom: 2rem;">
+                <input type="checkbox" name="email_reminders" id="email_reminders" {% if current_user.email_reminders %}checked{% endif %} style="transform: scale(1.5); cursor: pointer;">
+                <label for="email_reminders" class="label-uppercase" style="margin-bottom: 0; cursor: pointer; user-select: none;">Enable Daily Email Reminders</label>
+            </div>
+            
+            <button type="submit" class="btn-premium" style="width: 100%; margin-top: 1rem;">SAVE SETTINGS</button>
+        </form>
+        
+        <div style="margin-top: 2rem;" class="text-center">
+            <a href="{{ url_for('dashboard.index') }}" class="label-uppercase" style="color: var(--color-forest); font-weight: 700; text-decoration: underline;">Back to Dashboard</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}Log In — Nutriq{% endblock %}
+
+{% block content %}
+<div class="hero flex-center" style="background-color: var(--color-sage); min-height: 100vh; padding-top: 8rem;">
+    <!-- Floating Organic Cards for premium layout visual -->
+    <div class="floating-card floating-card-1" style="width: 150px; height: 150px; top: 12%;">
+        <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=400" alt="Salad">
+    </div>
+    <div class="floating-card floating-card-2" style="width: 120px; height: 150px; bottom: 10%;">
+        <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&q=80&w=400" alt="Pizza slices">
+    </div>
+
+    <div class="modal-content" style="max-width: 500px; box-shadow: 0 30px 60px rgba(1, 71, 46, 0.15); border-radius: 4rem;">
+        <h1 class="text-center" style="font-size: 3rem; margin-bottom: 2rem; letter-spacing: -0.02em;">WELCOME BACK</h1>
+        
+        <form action="{{ url_for('auth.login') }}" method="POST">
+            {{ form.hidden_tag() }}
+            
+            <div class="form-group">
+                <label class="label-uppercase" for="email">Email Address</label>
+                {{ form.email(class="form-input", placeholder="enter your email address") }}
+                {% for error in form.email.errors %}
+                    <span style="color: red; font-size: 12px; font-weight: bold; display: block; margin-top: 5px;">{{ error }}</span>
+                {% endfor %}
+            </div>
+            
+            <div class="form-group">
+                <label class="label-uppercase" for="password">Password</label>
+                {{ form.password(class="form-input", placeholder="enter your password") }}
+                {% for error in form.password.errors %}
+                    <span style="color: red; font-size: 12px; font-weight: bold; display: block; margin-top: 5px;">{{ error }}</span>
+                {% endfor %}
+            </div>
+            
+            {{ form.submit(class="btn-premium", style="width: 100%; margin-top: 1rem;") }}
+        </form>
+        
+        <div style="margin-top: 2rem;" class="text-center">
+            <span class="label-uppercase" style="font-size: 10px; display: inline;">New to Nutriq?</span>
+            <a href="{{ url_for('auth.register') }}" class="label-uppercase" style="display: inline; color: var(--color-forest); font-weight: 700; text-decoration: underline; margin-left: 0.5rem;">Create Account</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+
+{% block title %}Calorie Diary — Nutriq{% endblock %}
+
+{% block content %}
+<div class="hero flex-center" style="background-color: var(--color-sage); min-height: 40vh; height: auto; padding-top: 10rem; padding-bottom: 4rem;">
+    <div class="container" style="padding: 0 4rem;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+            <div>
+                <h1 style="font-size: 5vw; line-height: 0.9; margin-bottom: 1rem;">YOUR DIARY</h1>
+                <p class="label-uppercase" style="opacity: 0.7;">Past 30 Days Nutritional Overview</p>
+            </div>
+            
+            <div>
+                <a href="{{ url_for('diary.export') }}" class="btn-premium">EXPORT AS CSV</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="section-wrapper section-olive">
+    <div class="container">
+        <!-- Summaries Grid -->
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; margin-bottom: 4rem;">
+            <div class="db-panel" style="margin-bottom: 0; padding: 2rem;">
+                <span class="label-uppercase" style="font-size: 9px; opacity: 0.7;">Average Daily Calories</span>
+                <strong style="font-size: 2.5rem; font-family: var(--font-display); line-height: 1;">{{ avg_calories }} kcal</strong>
+            </div>
+            <div class="db-panel" style="margin-bottom: 0; padding: 2rem;">
+                <span class="label-uppercase" style="font-size: 9px; opacity: 0.7;">Calorie Target</span>
+                <strong style="font-size: 2.5rem; font-family: var(--font-display); line-height: 1;">{{ target_calories }} kcal</strong>
+            </div>
+            <div class="db-panel" style="margin-bottom: 0; padding: 2rem;">
+                <span class="label-uppercase" style="font-size: 9px; opacity: 0.7;">Best Day (Closest)</span>
+                <strong style="font-size: 2.25rem; font-family: var(--font-display); line-height: 1;">{{ best_day }}</strong>
+            </div>
+            <div class="db-panel" style="margin-bottom: 0; padding: 2rem;">
+                <span class="label-uppercase" style="font-size: 9px; opacity: 0.7;">Most Logged Foods</span>
+                <div style="font-size: 13px; font-weight: 700; text-transform: uppercase; margin-top: 0.5rem; line-height: 1.4;">
+                    {% if most_common_foods %}
+                        {% for food in most_common_foods %}
+                            <div>&bull; {{ food }}</div>
+                        {% endfor %}
+                    {% else %}
+                        No logs recorded yet.
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <h3 class="label-uppercase" style="margin-bottom: 2rem; opacity: 0.8;">30-Day Grid</h3>
+        
+        <!-- Calendar Grid -->
+        <div class="diary-calendar">
+            {% for day in calendar_days %}
+                <div class="calendar-day-node" data-date="{{ day.date_str }}" data-cals="{{ day.calories }}" data-protein="{{ day.protein }}" data-carbs="{{ day.carbs }}" data-fat="{{ day.fat }}">
+                    <div class="day-header-lbl">
+                        <span>{{ day.day_name }}</span>
+                        <span>{{ day.date_display }}</span>
+                    </div>
+                    
+                    <div style="margin: 1rem 0;">
+                        {% if day.calories > 0 %}
+                            <div class="day-cal-val">{{ day.calories }}</div>
+                            <span style="font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.6;">kcal</span>
+                        {% else %}
+                            <div class="day-cal-val" style="opacity: 0.25;">—</div>
+                            <span style="font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.25;">empty</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="dot-status status-{{ day.color }}"></span>
+                        {% if day.logs|length > 0 %}
+                            <span style="font-size: 9px; font-weight: 700; opacity: 0.6;">{{ day.logs|length }} logs</span>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Day details expand modal -->
+<div id="day-logs-detail-modal" class="nutriq-modal">
+    <div class="modal-content" style="max-width: 600px; border-radius: 4rem;">
+        <button class="modal-close-trigger" id="close-detail-modal-btn">✕</button>
+        <h2 id="detail-modal-date" style="font-size: 2.5rem; margin-bottom: 0.5rem;">Date</h2>
+        <p class="label-uppercase" id="detail-modal-totals" style="opacity: 0.6; margin-bottom: 2.5rem;">0 kcal total</p>
+        
+        <div class="logs-list" id="detail-modal-logs-list" style="max-height: 300px; overflow-y: auto; margin-bottom: 2rem;">
+            <!-- Appended programmatically -->
+        </div>
+
+        <div style="display: flex; justify-content: space-between; border-top: 1px solid rgba(1, 71, 46, 0.08); padding-top: 1.5rem;">
+            <div>
+                <span class="label-uppercase" style="font-size: 9px; opacity: 0.7;">Protein</span>
+                <strong id="detail-modal-protein">0g</strong>
+            </div>
+            <div>
+                <span class="label-uppercase" style="font-size: 9px; opacity: 0.7;">Carbohydrates</span>
+                <strong id="detail-modal-carbs">0g</strong>
+            </div>
+            <div>
+                <span class="label-uppercase" style="font-size: 9px; opacity: 0.7;">Fat</span>
+                <strong id="detail-modal-fat">0g</strong>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bind calendar expansion logic -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const calendarNodes = document.querySelectorAll(".calendar-day-node");
+    const detailModal = document.getElementById("day-logs-detail-modal");
+    const detailModalDate = document.getElementById("detail-modal-date");
+    const detailModalTotals = document.getElementById("detail-modal-totals");
+    const detailModalLogsList = document.getElementById("detail-modal-logs-list");
+    const detailModalProtein = document.getElementById("detail-modal-protein");
+    const detailModalCarbs = document.getElementById("detail-modal-carbs");
+    const detailModalFat = document.getElementById("detail-modal-fat");
+    const closeDetailModalBtn = document.getElementById("close-detail-modal-btn");
+
+    // Full calendar log map passed from Flask Jinja
+    const calendarLogsMap = {
+        {% for day in calendar_days %}
+            "{{ day.date_str }}": [
+                {% for log in day.logs %}
+                    {
+                        "name": "{{ log.name }}",
+                        "name_hindi": "{{ log.name_hindi }}",
+                        "meal_type": "{{ log.meal_type }}",
+                        "quantity": {{ log.quantity }},
+                        "calories": {{ log.calories }},
+                        "protein": {{ log.protein }},
+                        "carbs": {{ log.carbs }},
+                        "fat": {{ log.fat }},
+                        "note": "{{ log.note }}"
+                    },
+                {% endfor %}
+            ],
+        {% endfor %}
+    };
+
+    calendarNodes.forEach(node => {
+        node.addEventListener("click", function () {
+            const dateStr = this.dataset.date;
+            const calories = this.dataset.cals;
+            const protein = this.dataset.protein;
+            const carbs = this.dataset.carbs;
+            const fat = this.dataset.fat;
+            
+            // Format date for title
+            const dateObj = new Date(dateStr);
+            const dateFormatted = dateObj.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+            
+            detailModalDate.innerText = dateFormatted;
+            detailModalTotals.innerText = `${calories} kcal total logged`;
+            detailModalProtein.innerText = `${protein}g`;
+            detailModalCarbs.innerText = `${carbs}g`;
+            detailModalFat.innerText = `${fat}g`;
+
+            const dayLogs = calendarLogsMap[dateStr] || [];
+            detailModalLogsList.innerHTML = "";
+
+            if (dayLogs.length === 0) {
+                detailModalLogsList.innerHTML = `
+                    <div class="text-center" style="padding: 2rem 0; opacity: 0.5;">
+                        <p>No food logged on this day.</p>
+                    </div>
+                `;
+            } else {
+                dayLogs.forEach(log => {
+                    const row = document.createElement("div");
+                    row.className = "log-item";
+                    row.style.padding = "1rem 1.5rem";
+                    row.innerHTML = `
+                        <div class="log-item-details">
+                            <h4 style="font-size: 1.1rem;">${log.name} ${log.name_hindi ? '('+log.name_hindi+')' : ''}</h4>
+                            <p>${log.meal_type} &bull; ${log.quantity}g &bull; ${log.note ? log.note : 'No notes'}</p>
+                        </div>
+                        <div class="log-item-macros" style="text-align: right;">
+                            <strong>${log.calories} kcal</strong>
+                        </div>
+                    `;
+                    detailModalLogsList.appendChild(row);
+                });
+            }
+
+            detailModal.style.display = "flex";
+        });
+    });
+
+    closeDetailModalBtn.addEventListener("click", function () {
+        detailModal.style.display = "none";
+    });
+
+    detailModal.addEventListener("click", function (e) {
+        if (e.target === detailModal) {
+            detailModal.style.display = "none";
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Log Meal — Nutriq{% endblock %}
+
+{% block content %}
+<div class="hero flex-center" style="background-color: var(--color-sage); min-height: 100vh; padding-top: 8rem;">
+    <div class="modal-content" style="max-width: 500px; box-shadow: 0 30px 60px rgba(1, 71, 46, 0.15); border-radius: 4rem;">
+        <h1 class="text-center" style="font-size: 2.5rem; margin-bottom: 0.5rem; letter-spacing: -0.01em;">LOG YOUR MEAL</h1>
+        
+        {% if food_item %}
+            <p class="text-center label-uppercase" style="margin-bottom: 2.5rem; color: var(--color-forest); opacity: 0.8;">
+                Logging: <strong>{{ food_item.name }}</strong> ({{ food_item.calories_per_100g | int }} kcal / 100g)
+            </p>
+            
+            <form action="{{ url_for('food.log') }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="food_item_id" value="{{ food_item.id }}">
+                
+                <div class="form-group">
+                    <label class="label-uppercase" for="meal_type">Meal Type</label>
+                    <select name="meal_type" id="meal_type" class="form-input" required>
+                        <option value="breakfast">Breakfast</option>
+                        <option value="lunch">Lunch</option>
+                        <option value="dinner">Dinner</option>
+                        <option value="snacks">Snacks</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="label-uppercase" for="quantity_grams">Quantity (grams)</label>
+                    <input type="number" name="quantity_grams" id="quantity_grams" class="form-input" value="100" min="1" max="5000" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="label-uppercase" for="note">Notes / Details</label>
+                    <input type="text" name="note" id="note" class="form-input" placeholder="e.g. 1 bowl, light oil">
+                </div>
+                
+                <button type="submit" class="btn-premium" style="width: 100%; margin-top: 1rem;">CONFIRM LOG</button>
+            </form>
+        {% else %}
+            <p class="text-center label-uppercase" style="margin-bottom: 2.5rem; opacity: 0.6;">No food item selected.</p>
+            <a href="{{ url_for('food.search') }}" class="btn-premium" style="width: 100%;">SEARCH FOODS</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

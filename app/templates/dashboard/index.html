@@ -1,0 +1,247 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard — Nutriq{% endblock %}
+
+{% block content %}
+<!-- Banner reminder for logging food today -->
+{% if show_reminder_banner %}
+<div class="container" style="padding-top: 8rem; margin-bottom: -6rem; padding-left: 4rem; padding-right: 4rem; position: relative; z-index: 100;">
+    <div class="log-item" style="background-color: var(--color-sage); border-color: var(--color-forest); box-shadow: 0 10px 30px var(--color-forest-shadow);">
+        <div class="log-item-details">
+            <h4 style="font-size: 1.1rem; color: var(--color-forest);">🔔 LOG YOUR FIRST MEAL</h4>
+            <p style="opacity: 0.8; color: var(--color-forest);">You haven't logged any calorie entries for today yet. Keep your streak going!</p>
+        </div>
+        <div>
+            <a href="{{ url_for('food.search') }}" class="btn-premium" style="padding: 0.75rem 1.5rem; font-size: 9px;">LOG FOOD NOW</a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Hero/Welcome Header -->
+<div class="hero" style="background-color: var(--color-sage); height: auto; min-height: unset; padding-bottom: 8rem; padding-top: {% if show_reminder_banner %}10rem{% else %}8rem{% endif %};">
+    <div class="hero-centerpiece" style="justify-content: flex-start; padding-left: 2rem;">
+        <h1 class="hero-massive-text" style="font-size: 10vw; letter-spacing: -0.03em;">
+            <span>H</span><span>E</span><span>L</span><span>L</span><span>O</span><span>,</span>&nbsp;<span>{{ first_name }}</span>
+        </h1>
+    </div>
+    
+    <div class="hero-bottom" style="padding-left: 2rem; padding-right: 2rem;">
+        <div class="hero-description">
+            Your daily target is set to <strong>{{ target_calories }} kcal</strong> based on your goals. Use the shortcuts below to track your meals, search foods, or ask the AI coach.
+        </div>
+        <div class="hero-origins">
+            STATUS: {% if current_user.is_premium %}👑 PREMIUM MEMBER{% else %}FREE PLAN{% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Main Dashboard Contents -->
+<div class="section-wrapper section-olive">
+    <div class="container">
+        
+        <div class="dashboard-grid">
+            <!-- Left Column: Calorie Progress & Logs -->
+            <div>
+                <!-- Calories Panel -->
+                <div class="db-panel db-panel-green">
+                    <div class="progress-circle-container">
+                        <div class="progress-text-col">
+                            <label class="label-uppercase">Calories Consumed Today</label>
+                            <div class="calorie-number">{{ total_calories }}</div>
+                            <p style="letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.8;">of {{ target_calories }} kcal target</p>
+                        </div>
+                        <div>
+                            <!-- Simple custom circular gauge using CSS/SVG -->
+                            <svg width="150" height="150" viewBox="0 0 150 150">
+                                <circle cx="75" cy="75" r="60" stroke="rgba(254, 250, 224, 0.15)" stroke-width="12" fill="none" />
+                                <circle cx="75" cy="75" r="60" stroke="var(--color-cream)" stroke-width="12" fill="none"
+                                        stroke-dasharray="377" 
+                                        stroke-dashoffset="{{ 377 - (377 * (total_calories / target_calories if total_calories < target_calories else 1)) }}" 
+                                        stroke-linecap="round"
+                                        transform="rotate(-90 75 75)" />
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <!-- Macros Percentage bars -->
+                    <div class="macro-bars">
+                        <div class="macro-bar-item">
+                            <div class="macro-bar-label">
+                                <span>Protein</span>
+                                <span>{{ protein_g }}g ({{ protein_pct }}%)</span>
+                            </div>
+                            <div class="macro-bar-bg">
+                                <div class="macro-bar-fill" style="width: {{ protein_pct }}%;"></div>
+                            </div>
+                        </div>
+                        <div class="macro-bar-item">
+                            <div class="macro-bar-label">
+                                <span>Carbohydrates</span>
+                                <span>{{ carbs_g }}g ({{ carbs_pct }}%)</span>
+                            </div>
+                            <div class="macro-bar-bg">
+                                <div class="macro-bar-fill" style="width: {{ carbs_pct }}%;"></div>
+                            </div>
+                        </div>
+                        <div class="macro-bar-item">
+                            <div class="macro-bar-label">
+                                <span>Fat</span>
+                                <span>{{ fat_g }}g ({{ fat_pct }}%)</span>
+                            </div>
+                            <div class="macro-bar-bg">
+                                <div class="macro-bar-fill" style="width: {{ fat_pct }}%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Log Panel -->
+                <div class="db-panel">
+                    <h3 style="font-size: 2rem; margin-bottom: 0.5rem;">Quick-Add Shortcuts</h3>
+                    <p class="label-uppercase" style="opacity: 0.6; margin-bottom: 2rem;">Log common Indian items instantly (100g serving)</p>
+                    
+                    {% for meal_type, foods in quick_add_foods.items() %}
+                        <div style="margin-bottom: 2rem;">
+                            <label class="label-uppercase" style="font-size: 11px; font-weight: 700; border-bottom: 1px solid rgba(1, 71, 46, 0.1); padding-bottom: 0.25rem;">
+                                {{ meal_type.capitalize() }}
+                            </label>
+                            
+                            <div class="quick-add-grid">
+                                {% if foods %}
+                                    {% for food in foods %}
+                                        <form action="{{ url_for('food.log') }}" method="POST" style="margin: 0;">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <input type="hidden" name="food_item_id" value="{{ food.id }}">
+                                            <input type="hidden" name="meal_type" value="{{ meal_type }}">
+                                            <input type="hidden" name="quantity_grams" value="100">
+                                            <input type="hidden" name="note" value="Quick-add shortcut">
+                                            <button type="submit" class="quick-add-btn" style="width: 100%;">
+                                                + {{ food.name }} ({{ food.calories_per_100g | int }} kcal)
+                                            </button>
+                                        </form>
+                                    {% endfor %}
+                                {% else %}
+                                    <p style="font-size: 12px; grid-column: span 4; opacity: 0.6;">Seed foods to see quick-add shortcuts.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Recent Logs list -->
+                <div class="db-panel">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                        <h3 style="font-size: 2rem;">Today's Entries</h3>
+                        <a href="{{ url_for('food.search') }}" class="btn-premium" style="padding: 0.75rem 1.5rem; font-size: 9px;">SEARCH & ADD FOOD</a>
+                    </div>
+                    
+                    <div class="logs-list">
+                        {% if recent_logs %}
+                            {% for log in recent_logs %}
+                                <div class="log-item">
+                                    <div class="log-item-details">
+                                        <h4>{{ log.food_item.name }}</h4>
+                                        <p>{{ log.meal_type.capitalize() }} &bull; {{ log.quantity_grams | int }}g &bull; {{ log.note or 'No notes' }}</p>
+                                    </div>
+                                    <div style="display: flex; align-items: center;">
+                                        <div class="log-item-macros">
+                                            <strong>{{ log.calories | int }} kcal</strong>
+                                            <div style="font-size: 10px; opacity: 0.7; font-weight: normal; margin-top: 2px;">
+                                                P: {{ log.protein | round(1) }}g | C: {{ log.carbs | round(1) }}g | F: {{ log.fat | round(1) }}g
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Delete Form -->
+                                        <form action="{{ url_for('food.delete_log', log_id=log.id) }}" method="POST" style="margin: 0;">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="log-delete-btn" title="Delete entry">✕</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center" style="padding: 3rem 0; opacity: 0.5;">
+                                <p>No logs recorded today.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Weight Trends & Quick Actions -->
+            <div>
+                <!-- Barcode scan prompt -->
+                <div class="db-panel text-center" style="background-color: var(--color-cream); border: 2px dashed var(--color-forest);">
+                    <h3 style="font-size: 1.75rem; margin-bottom: 1rem;">📱 BARCODE SCANNER</h3>
+                    <p style="font-size: 13px; margin-bottom: 2rem;">Scan packaged items using your phone camera for instant logs.</p>
+                    <a href="{{ url_for('food.barcode_scanner') }}" class="btn-premium" style="width: 100%;">START CAMERA</a>
+                </div>
+
+                <!-- Weight Progress SVG Graph -->
+                <div class="db-panel">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="font-size: 2rem;">Weight Logs</h3>
+                        <a href="{{ url_for('goals.index') }}" class="btn-premium" style="padding: 0.5rem 1rem; font-size: 9px;">LOG WEIGHT</a>
+                    </div>
+                    
+                    <div class="svg-chart-wrapper">
+                        <!-- Inline SVG chart -->
+                        <svg width="100%" height="100" viewBox="0 0 320 100" preserveAspectRatio="none">
+                            <!-- Grid lines -->
+                            <line x1="20" y1="15" x2="300" y2="15" class="svg-grid-line" />
+                            <line x1="20" y1="50" x2="300" y2="50" class="svg-grid-line" />
+                            <line x1="20" y1="85" x2="300" y2="85" class="svg-grid-line" />
+                            
+                            {% if svg_points %}
+                                <!-- Line path -->
+                                <path d="M {{ svg_points }}" class="svg-line" />
+                                
+                                <!-- Scatter points -->
+                                {% for dot in svg_dots %}
+                                    <circle cx="{{ dot.x }}" cy="{{ dot.y }}" r="5" class="svg-dot" title="{{ dot.val }} kg" />
+                                    <!-- Render weight value text for endpoints -->
+                                    {% if loop.first or loop.last %}
+                                        <text x="{{ dot.x }}" y="{{ dot.y - 10 }}" class="svg-lbl" text-anchor="middle">{{ dot.val }} kg</text>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
+                        </svg>
+                        
+                        <div style="display: flex; justify-content: space-between; font-size: 10px; font-weight: 700; margin-top: 1rem; text-transform: uppercase;">
+                            <span>{{ svg_dots[0].date if svg_dots else 'Past' }}</span>
+                            <span>{{ svg_dots[-1].date if svg_dots else 'Today' }}</span>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 2rem; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(1, 71, 46, 0.08); padding-top: 1.5rem;">
+                        <div>
+                            <span class="label-uppercase" style="font-size: 9px; opacity: 0.7;">Current Weight</span>
+                            <strong style="font-size: 1.25rem;">{{ current_user.weight_kg }} kg</strong>
+                        </div>
+                        <div>
+                            <span class="label-uppercase" style="font-size: 9px; opacity: 0.7;">Calorie Deficit/Surplus</span>
+                            <strong style="font-size: 1.25rem;">
+                                {% if current_user.goal == 'lose' %}-500 kcal{% elif current_user.goal == 'gain' %}+500 kcal{% else %}0 kcal{% endif %}
+                            </strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Coaching Quick Link -->
+                <div class="db-panel db-panel-green text-center">
+                    <h3 style="font-size: 2rem; color: var(--color-cream); margin-bottom: 1rem;">💡 AI NUTRITIONIST</h3>
+                    <p style="font-size: 13px; color: var(--color-sage); margin-bottom: 2rem; line-height: 1.4;">
+                        Let our Gemini AI build a custom 7-day Indian meal plan or chat directly to analyze your recipes.
+                    </p>
+                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                        <a href="{{ url_for('ai.diet_plan') }}" class="btn-premium" style="background-color: var(--color-cream); color: var(--color-forest);">MEAL PLANNER</a>
+                        <a href="{{ url_for('ai.chatbot') }}" class="btn-premium" style="background-color: var(--color-sage); color: var(--color-forest);">CHAT ASSISTANT</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

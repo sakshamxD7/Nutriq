@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign Up — Onboarding — Nutriq{% endblock %}
+
+{% block content %}
+<div class="hero flex-center" style="background-color: var(--color-sage); min-height: 100vh; padding: 10rem 2rem 6rem 2rem; height: auto;">
+    <!-- Floating Organic Cards for premium layout visual -->
+    <div class="floating-card floating-card-1" style="width: 120px; height: 120px; top: 15%;">
+        <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=400" alt="Ingredients">
+    </div>
+    
+    <div class="modal-content" style="max-width: 650px; box-shadow: 0 30px 60px rgba(1, 71, 46, 0.15); border-radius: 4rem; margin: 0 auto;">
+        <h1 class="text-center" style="font-size: 3rem; margin-bottom: 0.5rem; letter-spacing: -0.02em;">JOIN NUTRIQ</h1>
+        <p class="text-center label-uppercase" style="margin-bottom: 3rem; font-size: 10px; opacity: 0.7;">Tell us about yourself to customize your targets</p>
+        
+        <form action="{{ url_for('auth.register') }}" method="POST">
+            {{ form.hidden_tag() }}
+            
+            <h3 style="font-size: 1.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(1, 71, 46, 0.1); padding-bottom: 0.5rem;">1. CREDENTIALS</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                <div class="form-group">
+                    <label class="label-uppercase" for="name">Your Name</label>
+                    {{ form.name(class="form-input", placeholder="Saksham") }}
+                    {% for error in form.name.errors %}
+                        <span style="color: red; font-size: 11px; display: block; margin-top: 5px;">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                
+                <div class="form-group">
+                    <label class="label-uppercase" for="email">Email</label>
+                    {{ form.email(class="form-input", placeholder="saksham@example.com") }}
+                    {% for error in form.email.errors %}
+                        <span style="color: red; font-size: 11px; display: block; margin-top: 5px;">{{ error }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="label-uppercase" for="password">Password (min 6 chars)</label>
+                {{ form.password(class="form-input", placeholder="••••••••") }}
+                {% for error in form.password.errors %}
+                    <span style="color: red; font-size: 11px; display: block; margin-top: 5px;">{{ error }}</span>
+                {% endfor %}
+            </div>
+
+            <h3 style="font-size: 1.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(1, 71, 46, 0.1); padding-bottom: 0.5rem; margin-top: 2rem;">2. ONBOARDING METRICS</h3>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem;">
+                <div class="form-group">
+                    <label class="label-uppercase" for="age">Age</label>
+                    {{ form.age(class="form-input", placeholder="25") }}
+                    {% for error in form.age.errors %}
+                        <span style="color: red; font-size: 11px; display: block; margin-top: 5px;">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                
+                <div class="form-group">
+                    <label class="label-uppercase" for="height_cm">Height (cm)</label>
+                    {{ form.height_cm(class="form-input", placeholder="175") }}
+                    {% for error in form.height_cm.errors %}
+                        <span style="color: red; font-size: 11px; display: block; margin-top: 5px;">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                
+                <div class="form-group">
+                    <label class="label-uppercase" for="weight_kg">Weight (kg)</label>
+                    {{ form.weight_kg(class="form-input", placeholder="70") }}
+                    {% for error in form.weight_kg.errors %}
+                        <span style="color: red; font-size: 11px; display: block; margin-top: 5px;">{{ error }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                <div class="form-group">
+                    <label class="label-uppercase" for="gender">Gender</label>
+                    {{ form.gender(class="form-input") }}
+                    {% for error in form.gender.errors %}
+                        <span style="color: red; font-size: 11px; display: block; margin-top: 5px;">{{ error }}</span>
+                    {% endfor %}
+                </div>
+
+                <div class="form-group">
+                    <label class="label-uppercase" for="dietary_pref">Dietary Preference</label>
+                    {{ form.dietary_pref(class="form-input") }}
+                    {% for error in form.dietary_pref.errors %}
+                        <span style="color: red; font-size: 11px; display: block; margin-top: 5px;">{{ error }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="label-uppercase" for="activity_level">Activity Level</label>
+                {{ form.activity_level(class="form-input") }}
+                {% for error in form.activity_level.errors %}
+                    <span style="color: red; font-size: 11px; display: block; margin-top: 5px;">{{ error }}</span>
+                {% endfor %}
+            </div>
+
+            <div class="form-group">
+                <label class="label-uppercase" for="goal">Your Calorie Goal</label>
+                {{ form.goal(class="form-input") }}
+                {% for error in form.goal.errors %}
+                    <span style="color: red; font-size: 11px; display: block; margin-top: 5px;">{{ error }}</span>
+                {% endfor %}
+            </div>
+
+            {{ form.submit(class="btn-premium", style="width: 100%; margin-top: 2rem;") }}
+        </form>
+
+        <div style="margin-top: 2rem;" class="text-center">
+            <span class="label-uppercase" style="font-size: 10px; display: inline;">Already registered?</span>
+            <a href="{{ url_for('auth.login') }}" class="label-uppercase" style="display: inline; color: var(--color-forest); font-weight: 700; text-decoration: underline; margin-left: 0.5rem;">Login here</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

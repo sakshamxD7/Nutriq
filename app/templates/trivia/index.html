@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}Calorie Trivia Game — Nutriq{% endblock %}
+
+{% block content %}
+<div class="hero flex-center" style="background-color: var(--color-sage); min-height: 45vh; height: auto; padding-top: 10rem; padding-bottom: 4rem;">
+    <div class="container text-center" style="max-width: 800px; padding: 0 2rem;">
+        <h1 style="font-size: 5vw; line-height: 0.9; margin-bottom: 1.5rem;">NUTRIQ TRIVIA</h1>
+        <p class="label-uppercase" style="opacity: 0.7; margin-bottom: 3rem;">Which food item has FEWER calories per 100g?</p>
+        
+        <!-- Streaks details row -->
+        <div style="display: flex; justify-content: center; gap: 4rem; font-weight: bold;">
+            <div>
+                <span class="label-uppercase" style="font-size: 9px; opacity: 0.7;">Current Streak</span>
+                <strong id="streak-value" style="font-size: 2.5rem; font-family: var(--font-display); line-height: 1; color: var(--color-forest);">{{ streak }}</strong>
+            </div>
+            <div>
+                <span class="label-uppercase" style="font-size: 9px; opacity: 0.7;">Best Streak</span>
+                <strong id="best-streak-value" style="font-size: 2.5rem; font-family: var(--font-display); line-height: 1; color: var(--color-forest);">{{ best_streak }}</strong>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="section-wrapper section-olive" style="min-height: 50vh;">
+    <div class="container" style="max-width: 900px;">
+        
+        {% if error %}
+            <div class="db-panel text-center" style="padding: 5rem 2rem;">
+                <p>{{ error }}</p>
+            </div>
+        {% else %}
+            <!-- Trivia Split Options -->
+            <div class="trivia-split">
+                <div class="trivia-choice-card" id="item-card-1" data-id="{{ item1.id }}">
+                    <p class="label-uppercase" style="opacity: 0.5;">Option A</p>
+                    <h3 style="font-family: var(--font-body); font-weight: bold; text-transform: none; font-size: 2.5rem; margin-top: 1.5rem;">
+                        {{ item1.name }}
+                    </h3>
+                    <p style="font-size: 1.25rem; font-style: italic; opacity: 0.8; margin-top: 0.25rem;">
+                        {{ item1.name_hindi or '' }}
+                    </p>
+                    
+                    <!-- Calorie Reveal Badge -->
+                    <div class="calorie-reveal-badge">100 kcal</div>
+                </div>
+
+                <div class="trivia-choice-card" id="item-card-2" data-id="{{ item2.id }}">
+                    <p class="label-uppercase" style="opacity: 0.5;">Option B</p>
+                    <h3 style="font-family: var(--font-body); font-weight: bold; text-transform: none; font-size: 2.5rem; margin-top: 1.5rem;">
+                        {{ item2.name }}
+                    </h3>
+                    <p style="font-size: 1.25rem; font-style: italic; opacity: 0.8; margin-top: 0.25rem;">
+                        {{ item2.name_hindi or '' }}
+                    </p>
+                    
+                    <!-- Calorie Reveal Badge -->
+                    <div class="calorie-reveal-badge">100 kcal</div>
+                </div>
+            </div>
+
+            <!-- Answer facts panel -->
+            <div class="db-panel text-center" id="trivia-fact-container" style="margin-top: 4rem; display: none; background-color: var(--color-cream); border: 1px solid rgba(1, 71, 46, 0.08);">
+                <span class="label-uppercase" style="font-size: 10px; color: var(--color-forest);">Nutritional Fact</span>
+                <p id="trivia-fact-text" style="font-size: 1.25rem; margin: 1rem 0; line-height: 1.4; font-weight: normal; color: var(--color-forest);"></p>
+            </div>
+
+            <!-- Share widget -->
+            <div class="text-center" id="share-streak-container" style="margin-top: 2rem; display: none;">
+                <p class="label-uppercase" style="font-size: 9px; opacity: 0.6; margin-bottom: 0.5rem;">Share your score!</p>
+                <div id="share-streak-text" style="font-style: italic; font-weight: bold; margin-bottom: 1rem;"></div>
+                <button class="btn-premium" style="padding: 0.5rem 1.5rem; font-size: 9px; background-color: var(--color-white); color: var(--color-forest); border: 1px solid var(--color-forest);" onclick="navigator.clipboard.writeText(document.getElementById('share-streak-text').innerText); alert('Copied to clipboard!');">COPY SHARE TEXT</button>
+            </div>
+
+            <div class="text-center" style="margin-top: 3rem;">
+                <button id="next-trivia-btn" class="btn-premium" style="display: none; padding: 1.25rem 3rem;">NEXT QUESTION</button>
+            </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<!-- Load trivia game logic -->
+<script src="{{ url_for('static', filename='js/trivia.js') }}"></script>
+{% endblock %}

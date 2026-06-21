@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+
+{% block title %}Search & Log Food — Nutriq{% endblock %}
+
+{% block content %}
+<div class="hero flex-center" style="background-color: var(--color-sage); min-height: 40vh; height: auto; padding-top: 10rem; padding-bottom: 4rem;">
+    <div class="container text-center" style="max-width: 800px; padding: 0 2rem;">
+        <h1 style="font-size: 5vw; line-height: 0.9; margin-bottom: 2rem;">SEARCH FOOD DATABASE</h1>
+        
+        <!-- Search Input Form -->
+        <div class="form-group" style="position: relative;">
+            <input type="text" id="food-db-search-input" class="form-input" placeholder="Type a food (e.g. Idli, Paneer, Chicken curry, Roti)..." style="font-size: 1.25rem; padding: 1.5rem 3rem; border-radius: 5rem;" autocomplete="off" autofocus>
+        </div>
+    </div>
+</div>
+
+<div class="section-wrapper section-olive" style="min-height: 50vh;">
+    <div class="container" style="max-width: 800px;">
+        <h3 class="label-uppercase" style="margin-bottom: 2rem; opacity: 0.8;" id="search-status-lbl">Common Foods</h3>
+        
+        <!-- Search Results List -->
+        <div class="logs-list" id="search-results-list">
+            <div class="text-center" style="padding: 3rem 0; opacity: 0.5;">
+                <p>Type above to search the Indian Food Database.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for logging food -->
+<div id="food-log-modal" class="nutriq-modal">
+    <div class="modal-content" style="max-width: 500px; border-radius: 4rem;">
+        <button class="modal-close-trigger" id="close-log-modal-btn">✕</button>
+        <h2 id="modal-food-name" style="font-size: 2.25rem; margin-bottom: 0.5rem;">Food Name</h2>
+        <p id="modal-food-calories" class="label-uppercase" style="opacity: 0.6; margin-bottom: 2.5rem;">130 kcal per 100g</p>
+        
+        <form action="{{ url_for('food.log') }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="food_item_id" id="modal-food-id-input">
+            
+            <div class="form-group">
+                <label class="label-uppercase" for="modal-meal-type">Meal Type</label>
+                <select name="meal_type" id="modal-meal-type" class="form-input" required>
+                    <option value="breakfast">Breakfast</option>
+                    <option value="lunch">Lunch</option>
+                    <option value="dinner">Dinner</option>
+                    <option value="snacks">Snacks</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="label-uppercase" for="modal-quantity">Quantity (grams)</label>
+                <input type="number" name="quantity_grams" id="modal-quantity" class="form-input" value="100" min="1" max="5000" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="label-uppercase" for="modal-note">Notes (optional)</label>
+                <input type="text" name="note" id="modal-note" class="form-input" placeholder="e.g. 2 pieces, homemade">
+            </div>
+            
+            <button type="submit" class="btn-premium" style="width: 100%; margin-top: 1rem;">LOG THIS MEAL</button>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const searchInput = document.getElementById("food-db-search-input");
+    const resultsList = document.getElementById("search-results-list");
+    const statusLbl = document.getElementById("search-status-lbl");
+    
+    // Modal elements
+    const logModal = document.getElementById("food-log-modal");
+    const modalFoodName = document.getElementById("modal-food-name");
+    const modalFoodCalories = document.getElementById("modal-food-calories");
+    const modalFoodIdInput = document.getElementById("modal-food-id-input");
+    const closeLogModalBtn = document.getElementById("close-log-modal-btn");
+
+    let debounceTimeout = null;
+
+    // Trigger search on input keyup
+    searchInput.addEventListener("input", function () {
+        const query = searchInput.value.trim();
+        
+        if (debounceTimeout) {
+            clearTimeout(debounceTimeout);
+        }
+        
+        if (query.length < 2) {
+            statusLbl.innerText = "Common Foods";
+            // Preload empty list
+            resultsList.innerHTML = `
+                <div class="text-center" style="padding: 3rem 0; opacity: 0.5;">
+                    <p>Type above to search the Indian Food Database.</p>
+                </div>
+            `;
+            return;
+        }
+
+        statusLbl.innerText = "Searching...";
+        
+        debounceTimeout = setTimeout(() => {
+            fetch(`/food/search?format=json&q=${encodeURIComponent(query)}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                resultsList.innerHTML = "";
+                statusLbl.innerText = `Search Results (${data.length})`;
+
+                if (data.length === 0) {
+                    resultsList.innerHTML = `
+                        <div class="text-center" style="padding: 3rem 0; opacity: 0.5;">
+                            <p>No matches found. Try searching something else.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                data.forEach(item => {
+                    const row = document.createElement("div");
+                    row.className = "log-item";
+                    row.style.cursor = "pointer";
+                    
+                    row.innerHTML = `
+                        <div class="log-item-details">
+                            <h4>${item.name} ${item.name_hindi ? '(' + item.name_hindi + ')' : ''}</h4>
+                            <p>${item.category} &bull; ${item.region ? item.region : 'Global'}</p>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div class="log-item-macros" style="text-align: right;">
+                                <strong>${parseInt(item.calories_per_100g)} kcal</strong>
+                                <div style="font-size: 10px; opacity: 0.7; font-weight: normal; margin-top: 2px;">
+                                    P: ${item.protein_g}g | C: ${item.carbs_g}g | F: ${item.fat_g}g
+                                </div>
+                            </div>
+                            <span style="font-size: 1.5rem;">+</span>
+                        </div>
+                    `;
+                    
+                    // Clicking on a row opens the log modal
+                    row.addEventListener("click", function () {
+                        modalFoodName.innerText = item.name;
+                        modalFoodCalories.innerText = `${parseInt(item.calories_per_100g)} kcal per 100g`;
+                        modalFoodIdInput.value = item.id;
+                        logModal.style.display = "flex";
+                    });
+
+                    resultsList.appendChild(row);
+                });
+            })
+            .catch(err => {
+                console.error("Fuzzy search error:", err);
+                statusLbl.innerText = "Search Error";
+            });
+        }, 300);
+    });
+
+    closeLogModalBtn.addEventListener("click", function () {
+        logModal.style.display = "none";
+    });
+
+    // Close modal on background click
+    logModal.addEventListener("click", function (e) {
+        if (e.target === logModal) {
+            logModal.style.display = "none";
+        }
+    });
+});
+</script>
+{% endblock %}

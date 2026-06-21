@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}AI Nutritionist Assistant — Nutriq{% endblock %}
+
+{% block content %}
+<div class="hero flex-center" style="background-color: var(--color-sage); min-height: 40vh; height: auto; padding-top: 10rem; padding-bottom: 4rem;">
+    <div class="container" style="padding: 0 4rem; max-width: 900px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; width: 100%;">
+            <div>
+                <h1 style="font-size: 5vw; line-height: 0.9; margin-bottom: 1rem;">AI ASSISTANT</h1>
+                <p class="label-uppercase" style="opacity: 0.7;">Chat live with our Gemini-powered Nutritionist</p>
+            </div>
+            
+            <div>
+                <button class="btn-premium" id="clear-chat-btn" style="background-color: transparent; border: 1px solid var(--color-forest); color: var(--color-forest);">CLEAR HISTORY</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="section-wrapper section-olive">
+    <div class="container" style="max-width: 900px;">
+        <!-- Chatbox Container -->
+        <div class="db-panel" style="padding: 2.5rem; box-shadow: 0 20px 40px rgba(1, 71, 46, 0.1);">
+            <div class="chat-messages-container" id="chat-messages">
+                <!-- Fallback greeting -->
+                <div class="chat-bubble chat-bubble-bot">
+                    Hi! I am your Nutriq Assistant. Ask me anything about Indian food calories, macros, or nutrition tips!
+                </div>
+                
+                <!-- Session history load if any exists -->
+                {% if session.get('chat_history') %}
+                    {% for exchange in session.get('chat_history') %}
+                        <div class="chat-bubble chat-bubble-user">
+                            {{ exchange.user }}
+                        </div>
+                        <div class="chat-bubble chat-bubble-bot">
+                            {{ exchange.bot }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+
+            <!-- Input Box Form -->
+            <form id="chat-form" style="display: flex; gap: 1rem; margin: 0;">
+                <input type="text" id="chat-input" class="form-input" placeholder="Ask about foods (e.g. Is paneer high in fat? or How many calories in a butter chicken meal?)..." style="flex-grow: 1; border-radius: 5rem; padding: 1.25rem 2.5rem;" autocomplete="off" required>
+                <button type="submit" class="btn-premium" style="padding: 1rem 2.5rem;">SEND</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Load script chat assistant -->
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+{% endblock %}
