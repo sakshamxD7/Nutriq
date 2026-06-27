@@ -8,11 +8,16 @@ A full-stack nutrition tracking web app built for Indian users. Covers calorie l
 
 ## Screenshots
 
-| Dashboard | Food Diary | AI Chatbot |
-|:---:|:---:|:---:|
-| *(screenshot)* | *(screenshot)* | *(screenshot)* |
+##Dashboard
+<img width="1919" height="954" alt="image" src="https://github.com/user-attachments/assets/e7a77fc7-10bf-4128-b9d4-fdcb128c63e2" />
 
----
+##Food Diary
+<img width="1919" height="954" alt="image" src="https://github.com/user-attachments/assets/aef41831-619a-4353-9632-85a42a8f36fa" />
+
+##AI Chatbot
+<img width="1919" height="958" alt="image" src="https://github.com/user-attachments/assets/6867a88e-e709-46cf-85fa-a3c314a83520" />
+
+
 
 ## Features
 
@@ -184,4 +189,4 @@ python run.py
 
 **Saksham Jangir**  
 B.Tech CSE (Data Analytics) — JECRC University, Jaipur  
-[LinkedIn](https://linkedin.com/in/YOUR_PROFILE) · [GitHub](https://github.com/YOUR_USERNAME)
+[LinkedIn](https://linkedin.com/in/sakshamkumarjangir) · [GitHub](https://github.com/sakshamxD7)
